@@ -11,8 +11,10 @@
     />
     <template v-if="selectedSquare">
       <foreignObject :x="selectedSquare.x" :y="selectedSquare.y" width="100" height="100">
-        <div class="popup">
-          <!-- :style="{ left: selectedSquare.x + 10 + 'px', top: selectedSquare.y + 'px' }" -->
+        <div
+          class="popup"
+          :style="{ left: selectedSquare.x + 10 + 'px', top: selectedSquare.y + 'px' }"
+        >
           Current color: {{ selectedSquare.color }}
         </div>
       </foreignObject>
@@ -37,7 +39,6 @@ export default {
 
     const initSquares = () => {
       const numSquares = 100000
-      // const numSquares = 1
       for (let i = 0; i < numSquares; i++) {
         squares.value.push({
           x: Math.floor(Math.random() * 995),
@@ -75,7 +76,7 @@ export default {
 
     initSquares()
 
-    // Update square colors every 500ms
+    // Update square colors every 1000ms
     setInterval(updateSquareColors, 1000)
 
     // Watch for changes to selectedSquare and update color accordingly
