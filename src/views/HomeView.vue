@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="wrapper">
     <svg width="1000" height="1000" @click="selectSquare">
       <rect
         v-for="(square, index) in squares"
@@ -94,6 +94,10 @@ export default {
 </script>
 
 <style>
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
 .popup {
   width: 100px;
   height: 100px;
