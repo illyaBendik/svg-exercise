@@ -1,29 +1,30 @@
 <template>
-  <svg width="1000" height="1000" @click="selectSquare">
-    <rect
-      v-for="(square, index) in squares"
-      :key="index"
-      :x="square.x"
-      :y="square.y"
-      width="5"
-      height="5"
-      :fill="square.color"
-    />
-    <template v-if="selectedSquare">
-      <foreignObject :x="selectedSquare.x" :y="selectedSquare.y" width="100" height="100">
-        <div
-          class="popup"
-          :style="{ left: selectedSquare.x + 10 + 'px', top: selectedSquare.y + 'px' }"
-        >
-          Current color: {{ selectedSquare.color }}
-        </div>
-      </foreignObject>
-    </template>
-  </svg>
+  <div>
+    <svg width="1000" height="1000" @click="selectSquare">
+      <rect
+        v-for="(square, index) in squares"
+        :key="index"
+        :x="square.x"
+        :y="square.y"
+        width="5"
+        height="5"
+        :fill="square.color"
+      />
+    </svg>
+    <div
+      v-if="selectedSquare"
+      :style="{ left: selectedSquare.x + 'px', top: selectedSquare.y + 'px' }"
+      class="popup"
+    >
+      Current color: {{ selectedSquare.color }}
+    </div>
+  </div>
 </template>
 
 <script>
 import { ref, watch } from 'vue'
+const MAX_COUNT = 100000
+const LIMIT = 10000
 
 export default {
   setup() {
@@ -38,7 +39,7 @@ export default {
     }
 
     const initSquares = () => {
-      const numSquares = 100000
+      const numSquares = MAX_COUNT
       for (let i = 0; i < numSquares; i++) {
         squares.value.push({
           x: Math.floor(Math.random() * 995),
@@ -49,7 +50,7 @@ export default {
     }
 
     const updateSquareColors = () => {
-      const numUpdates = 2000
+      const numUpdates = LIMIT
       for (let i = 0; i < numUpdates; i++) {
         const index = Math.floor(Math.random() * squares.value.length)
         squares.value[index].color = getRandomColor()
@@ -60,26 +61,23 @@ export default {
     }
 
     const selectSquare = (event) => {
+      selectedSquare.value = null
       const rect = event.target.closest('rect')
       if (rect) {
         const index = Number(rect.getAttribute('data-index'))
         selectedSquare.value = {
           index,
-          x: squares.value[index].x + 5,
-          y: squares.value[index].y - 20,
+          x: event.clientX,
+          y: event.clientY,
           color: squares.value[index].color
         }
-      } else {
-        selectedSquare.value = null
       }
     }
 
     initSquares()
 
-    // Update square colors every 1000ms
     setInterval(updateSquareColors, 1000)
 
-    // Watch for changes to selectedSquare and update color accordingly
     watch(selectedSquare, (newVal) => {
       if (newVal) {
         newVal.color = squares.value[newVal.index].color
@@ -97,6 +95,8 @@ export default {
 
 <style>
 .popup {
+  width: 100px;
+  height: 100px;
   background-color: #fff;
   color: black;
   border: 1px solid #000;
