@@ -1,14 +1,16 @@
 <template>
   <div class="wrapper">
-    <svg width="1000" height="1000" @click="selectSquare">
+    <svg ref="svg" :width="width" :height="height">
       <rect
         v-for="(square, index) in squares"
         :key="index"
         :x="square.x"
         :y="square.y"
-        width="5"
-        height="5"
+        @click="selectSquare({ square, index })"
+        :width="SQUARE_SIZE"
+        :height="SQUARE_SIZE"
         :fill="square.color"
+        :class="{ selected: selectedSquare && selectedSquare.index === index }"
       />
     </svg>
     <div
@@ -22,14 +24,20 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue'
-const MAX_COUNT = 100000
-const LIMIT = 10000
+import { ref, onMounted, computed } from 'vue'
+
+const AMOUNT_SQUARES = 10000
+const SQUARE_SIZE = 30
+const LIMIT_UPDATE = 2000
 
 export default {
   setup() {
-    const squares = ref([])
+    const width = window.innerWidth
+    const numCols = Math.floor(width / SQUARE_SIZE)
+
     const selectedSquare = ref(null)
+    const rows = ref(0)
+    const height = computed(() => (rows.value === 0 ? SQUARE_SIZE : rows.value * SQUARE_SIZE))
 
     const getRandomColor = () => {
       const r = Math.floor(Math.random() * 256)
@@ -38,20 +46,25 @@ export default {
       return `rgb(${r}, ${g}, ${b})`
     }
 
-    const initSquares = () => {
-      const numSquares = MAX_COUNT
-      for (let i = 0; i < numSquares; i++) {
-        squares.value.push({
-          x: Math.floor(Math.random() * 995),
-          y: Math.floor(Math.random() * 995),
+    const createSquares = () => {
+      const squares = []
+      for (let i = 0; i < AMOUNT_SQUARES; i++) {
+        const row = Math.floor(i / numCols)
+        if (rows.value !== row) {
+          rows.value = row
+        }
+        const col = i % numCols
+        squares.push({
+          x: col * SQUARE_SIZE,
+          y: row * SQUARE_SIZE,
           color: getRandomColor()
         })
       }
+      return squares
     }
 
     const updateSquareColors = () => {
-      const numUpdates = LIMIT
-      for (let i = 0; i < numUpdates; i++) {
+      for (let i = 0; i < LIMIT_UPDATE; i++) {
         const index = Math.floor(Math.random() * squares.value.length)
         squares.value[index].color = getRandomColor()
         if (selectedSquare.value && index === selectedSquare.value.index) {
@@ -60,44 +73,36 @@ export default {
       }
     }
 
-    const selectSquare = (event) => {
-      selectedSquare.value = null
-      const rect = event.target.closest('rect')
-      if (rect) {
-        const index = Number(rect.getAttribute('data-index'))
-        selectedSquare.value = {
-          index,
-          x: event.clientX,
-          y: event.clientY,
-          color: squares.value[index].color
-        }
+    const selectSquare = ({ square, index }) => {
+      selectedSquare.value = {
+        index,
+        x: square.x + 15,
+        y: square.y + 15,
+        color: squares.value[index].color
       }
     }
 
-    initSquares()
+    const squares = ref(createSquares())
 
-    setInterval(updateSquareColors, 1000)
+    const update = () => {
+      updateSquareColors()
+      requestAnimationFrame(update)
+    }
 
-    watch(selectedSquare, (newVal) => {
-      if (newVal) {
-        newVal.color = squares.value[newVal.index].color
-      }
+    onMounted(() => {
+      requestAnimationFrame(update)
     })
 
-    return {
-      squares,
-      selectedSquare,
-      selectSquare
-    }
+    return { squares, width, height, SQUARE_SIZE, selectSquare, selectedSquare }
   }
 }
 </script>
-
 <style>
 .wrapper {
-  display: flex;
-  justify-content: center;
+  overflow-y: scroll;
+  height: 100vh;
 }
+
 .popup {
   width: 100px;
   height: 100px;
@@ -108,5 +113,9 @@ export default {
   padding: 5px;
   position: absolute;
   z-index: 1;
+}
+.selected {
+  stroke: black;
+  stroke-width: 5;
 }
 </style>
